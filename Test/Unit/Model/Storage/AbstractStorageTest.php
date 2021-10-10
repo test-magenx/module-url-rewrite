@@ -32,13 +32,10 @@ class AbstractStorageTest extends TestCase
      */
     protected $storage;
 
-    /**
-     * @inheritdoc
-     */
     protected function setUp(): void
     {
         $this->urlRewriteFactory = $this->getMockBuilder(UrlRewriteFactory::class)
-            ->onlyMethods(['create'])
+            ->setMethods(['create'])
             ->disableOriginalConstructor()
             ->getMock();
         $this->dataObjectHelper = $this->getMockBuilder(DataObjectHelper::class)
@@ -55,10 +52,7 @@ class AbstractStorageTest extends TestCase
         );
     }
 
-    /**
-     * @return void
-     */
-    public function testFindAllByData(): void
+    public function testFindAllByData()
     {
         $data = [['field1' => 'value1']];
         $rows = [['row1'], ['row2']];
@@ -69,25 +63,26 @@ class AbstractStorageTest extends TestCase
             ->with($data)
             ->willReturn($rows);
 
-        $this->dataObjectHelper
+        $this->dataObjectHelper->expects($this->at(0))
             ->method('populateWithArray')
-            ->withConsecutive(
-                [$urlRewrites[0], $rows[0], UrlRewrite::class],
-                [$urlRewrites[1], $rows[1], UrlRewrite::class]
-            )
-            ->willReturnOnConsecutiveCalls($this->dataObjectHelper, $this->dataObjectHelper);
+            ->with($urlRewrites[0], $rows[0], UrlRewrite::class)->willReturnSelf();
 
-        $this->urlRewriteFactory
+        $this->urlRewriteFactory->expects($this->at(0))
             ->method('create')
-            ->willReturnOnConsecutiveCalls($urlRewrites[0], $urlRewrites[1]);
+            ->willReturn($urlRewrites[0]);
+
+        $this->dataObjectHelper->expects($this->at(1))
+            ->method('populateWithArray')
+            ->with($urlRewrites[1], $rows[1], UrlRewrite::class)->willReturnSelf();
+
+        $this->urlRewriteFactory->expects($this->at(1))
+            ->method('create')
+            ->willReturn($urlRewrites[1]);
 
         $this->assertEquals($urlRewrites, $this->storage->findAllByData($data));
     }
 
-    /**
-     * @return void
-     */
-    public function testFindOneByDataIfNotFound(): void
+    public function testFindOneByDataIfNotFound()
     {
         $data = [['field1' => 'value1']];
 
@@ -99,10 +94,7 @@ class AbstractStorageTest extends TestCase
         $this->assertNull($this->storage->findOneByData($data));
     }
 
-    /**
-     * @return void
-     */
-    public function testFindOneByDataIfFound(): void
+    public function testFindOneByDataIfFound()
     {
         $data = [['field1' => 'value1']];
         $row = ['row1'];
@@ -124,20 +116,14 @@ class AbstractStorageTest extends TestCase
         $this->assertEquals($urlRewrite, $this->storage->findOneByData($data));
     }
 
-    /**
-     * @return void
-     */
-    public function testReplaceIfUrlsAreEmpty(): void
+    public function testReplaceIfUrlsAreEmpty()
     {
         $this->storage->expects($this->never())->method('doReplace');
 
         $this->storage->replace([]);
     }
 
-    /**
-     * @return void
-     */
-    public function testReplaceIfThrewDuplicateEntryExceptionWithCustomMessage(): void
+    public function testReplaceIfThrewDuplicateEntryExceptionWithCustomMessage()
     {
         $this->expectException('Magento\UrlRewrite\Model\Exception\UrlAlreadyExistsException');
         $this->expectExceptionMessage('Custom storage message');
@@ -149,10 +135,7 @@ class AbstractStorageTest extends TestCase
         $this->storage->replace([['UrlRewrite1']]);
     }
 
-    /**
-     * @return void
-     */
-    public function testReplaceIfThrewDuplicateEntryExceptionDefaultMessage(): void
+    public function testReplaceIfThrewDuplicateEntryExceptionDefaultMessage()
     {
         $this->expectException('Magento\UrlRewrite\Model\Exception\UrlAlreadyExistsException');
         $this->expectExceptionMessage('URL key for specified store already exists');
@@ -164,10 +147,7 @@ class AbstractStorageTest extends TestCase
         $this->storage->replace([['UrlRewrite1']]);
     }
 
-    /**
-     * @return void
-     */
-    public function testReplace(): void
+    public function testReplace()
     {
         $urls = [['UrlRewrite1'], ['UrlRewrite2']];
 
