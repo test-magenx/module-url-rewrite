@@ -1,5 +1,5 @@
 {
-    "name": "test-magenx/module-url-rewrite",
+    "name": "magenxcommerce/module-url-rewrite",
     "description": "N/A",
     "config": {
         "sort-packages": true
